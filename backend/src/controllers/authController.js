@@ -1,112 +1,109 @@
+// backend/src/controllers/authController.js
 const User = require('../models/User');
-const { AppError } = require('../middleware/errorHandler');
-const logger = require('../utils/logger');
 
-
-exports.instagramCallback = async (req, res) => {
-  try {
-    const token = jwt.sign(
-      { userId: req.user._id },
-      config.SESSION_SECRET,
-      { expiresIn: '24h' }
-    );
-
-    res.redirect(`${config.FRONTEND_URL}/auth/callback?token=${token}`);
-  } catch (error) {
-    logger.error('Instagram callback error:', error);
-    res.redirect(`${config.FRONTEND_URL}/auth/error`);
-  }
-};
-
-exports.register = async (req, res, next) => {
-  try {
-    const { username, email, password } = req.body;
-
-    // Check if user exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
-
-    if (existingUser) {
-      throw new AppError(
-        'Email or username already registered',
-        400
-      );
-    }
-
-    // Create new user
-    const user = await User.create({
-      username,
-      email,
-      password
-    });
-
-    // Generate token
-    const token = user.generateAuthToken();
-
-    // Remove password from response
-    user.password = undefined;
-
-    res.status(201).json({
-      status: 'success',
-      data: {
-        user,
-        token
+exports.register = async (req, res) => {
+    try {
+      const { username, email, password } = req.body;
+  
+      // Check if user exists
+      const existingUser = await User.findOne({
+        $or: [{ email }, { username }]
+      });
+  
+      if (existingUser) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Email or username already exists'
+        });
       }
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.login = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-
-    // Check if email and password provided
-    if (!email || !password) {
-      throw new AppError('Please provide email and password', 400);
+  
+      // Create user
+      const user = await User.create({
+        username,
+        email,
+        password
+      });
+  
+      // Generate token
+      const token = user.generateAuthToken();
+  
+      // Remove password from response
+      user.password = undefined;
+  
+      res.status(201).json({
+        status: 'success',
+        data: {
+          user,
+          token
+        }
+      });
+    } catch (error) {
+      console.error('Register error:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'An error occurred during registration'
+      });
     }
+  };
 
-    // Find user and include password
-    const user = await User.findOne({ email }).select('+password');
-
-    // Check if user exists and password is correct
-    if (!user || !(await user.comparePassword(password))) {
-      throw new AppError('Invalid email or password', 401);
-    }
-
-    // Generate token
-    const token = user.generateAuthToken();
-
-    // Remove password from response
-    user.password = undefined;
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        user,
-        token
+  
+exports.login = async (req, res) => {
+    try {
+      const { email, password } = req.body;
+  
+      // Check if email and password exist
+      if (!email || !password) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Please provide email and password'
+        });
       }
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.getCurrentUser = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.user.id);
-    
-    if (!user) {
-      throw new AppError('User not found', 404);
+  
+      // Find user and include password
+      const user = await User.findOne({ email }).select('+password');
+  
+      // Check if user exists and password is correct
+      if (!user || !(await user.comparePassword(password))) {
+        return res.status(401).json({
+          status: 'error',
+          message: 'Incorrect email or password'
+        });
+      }
+  
+      // Generate token
+      const token = user.generateAuthToken();
+  
+      // Remove password from response
+      user.password = undefined;
+  
+      res.json({
+        status: 'success',
+        data: {
+          user,
+          token
+        }
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'An error occurred during login'
+      });
     }
+  };
+  
 
-    res.status(200).json({
-      status: 'success',
-      data: { user }
-    });
-  } catch (error) {
-    next(error);
-  }
+exports.getCurrentUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        res.json({
+            status: 'success',
+            data: { user }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: error.message
+        });
+    }
 };

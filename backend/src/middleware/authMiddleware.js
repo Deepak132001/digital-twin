@@ -1,6 +1,6 @@
 // backend/src/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // Import the existing model
+const User = require('../models/User');
 
 exports.protect = async (req, res, next) => {
     try {
@@ -19,12 +19,12 @@ exports.protect = async (req, res, next) => {
 
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await User.findById(decoded.id);
+            const user = await User.findById(decoded.id).select('-password');
 
             if (!user) {
                 return res.status(404).json({
                     status: 'error',
-                    message: 'User not found'
+                    message: 'User no longer exists'
                 });
             }
 

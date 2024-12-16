@@ -16,8 +16,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Email is required'],
     unique: true,
-    lowercase: true,
     trim: true,
+    lowercase: true,
     match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
   },
   password: {
@@ -91,4 +91,5 @@ userSchema.methods.generateAuthToken = function() {
   );
 };
 
-module.exports = mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+module.exports = User;

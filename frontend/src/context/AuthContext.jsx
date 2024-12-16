@@ -9,41 +9,62 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = authService.getCurrentUser();
+    const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(storedUser);
+      setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
 
-  const updateUser = (userData) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-  };
-
   const login = async (email, password) => {
     try {
-      const data = await authService.login(email, password);
-      setUser(data.user);
-      return data;
+      const response = await authService.login(email, password);
+      setUser(response.data.user);
+      return response.data;
     } catch (error) {
       throw error;
     }
   };
 
+  const register = async (username, email, password) => {
+    try {
+      const response = await authService.register(username, email, password);
+      setUser(response.data.user);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateUser = async (userData) => {
+    try {
+      // Update local storage
+      localStorage.setItem('user', JSON.stringify(userData));
+      // Update state
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      throw new Error('Failed to update user data');
+    }
+  };
+
   const logout = () => {
-    authService.logout();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
   };
 
+  const value = {
+    user,
+    login,
+    register,
+    logout,
+    updateUser,  // Make sure updateUser is included here
+    loading
+  };
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      login,
-      logout,
-      loading,
-      updateUser // Add this
-    }}>
+    <AuthContext.Provider value={value}>
       {!loading && children}
     </AuthContext.Provider>
   );

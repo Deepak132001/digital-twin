@@ -1,21 +1,40 @@
 // src/pages/Dashboard.jsx
+import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import InstagramConnect from '../components/dashboard/InstagramConnect';
+import AnalyticsSummary from '../components/dashboard/AnalyticsSummary';
+import RecentPosts from '../components/dashboard/RecentPosts';
+import EngagementStats from '../components/dashboard/EngagementStats';
+
 const Dashboard = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    setLoading(false);
+  }, []);
+
+  // Add null check for user and user.instagram
+  if (user && !user.instagram?.connected) {
+    return <InstagramConnect />;
+  }
+
   return (
-    <div>
-      <h1 className="text-xl md:text-2xl font-bold mb-4">Dashboard</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-white p-4 md:p-6 rounded-lg shadow">
-          <h2 className="font-semibold mb-2">Total Followers</h2>
-          <p className="text-xl md:text-2xl">0</p>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="col-span-2">
+          <AnalyticsSummary stats={stats} loading={loading} />
         </div>
-        <div className="bg-white p-4 md:p-6 rounded-lg shadow">
-          <h2 className="font-semibold mb-2">Total Posts</h2>
-          <p className="text-xl md:text-2xl">0</p>
+        <div>
+          <EngagementStats stats={stats} loading={loading} />
         </div>
-        <div className="bg-white p-4 md:p-6 rounded-lg shadow">
-          <h2 className="font-semibold mb-2">Engagement Rate</h2>
-          <p className="text-xl md:text-2xl">0%</p>
-        </div>
+      </div>
+
+      <div className="mt-8">
+        <RecentPosts />
       </div>
     </div>
   );

@@ -178,3 +178,5 @@
 {"level":"info","message":"MongoDB connected successfully","timestamp":"2024-12-13T08:55:51.765Z"}
 {"level":"info","message":"Server running in development mode on port 3000","timestamp":"2024-12-13T09:02:36.470Z"}
 {"level":"info","message":"MongoDB connected successfully","timestamp":"2024-12-13T09:02:37.360Z"}
+{"level":"info","message":"Server running in development mode on port 3000","timestamp":"2024-12-13T14:59:48.706Z"}
+{"level":"info","message":"MongoDB connected successfully","timestamp":"2024-12-13T14:59:49.552Z"}

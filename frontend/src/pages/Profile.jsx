@@ -1,17 +1,14 @@
 // src/pages/Profile.jsx
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import profileService from '../services/profileService';
+import axiosInstance from '../services/axiosConfig';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     username: user?.username || '',
-    email: user?.email || '',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    email: user?.email || ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -24,49 +21,36 @@ const Profile = () => {
     setLoading(true);
 
     try {
-        // Check if profile data has changed
-        if (formData.username !== user.username || formData.email !== user.email) {
-            const response = await profileService.updateProfile({
-                username: formData.username,
-                email: formData.email
-            });
-            
-            // Make sure we're accessing the correct data structure
-            if (response.status === 'success' && response.data.user) {
-                updateUser(response.data.user);
-                setSuccess('Profile updated successfully');
-            }
-        }
+      // Debug logs
+      console.log('Sending update request with:', formData);
 
-        // Handle password change if provided
-        if (formData.currentPassword && formData.newPassword) {
-            if (formData.newPassword !== formData.confirmPassword) {
-                throw new Error('New passwords do not match');
-            }
-            await profileService.changePassword({
-                currentPassword: formData.currentPassword,
-                newPassword: formData.newPassword
-            });
-            setSuccess(prev => prev + ' Password updated successfully');
-        }
+      const response = await axiosInstance.put('/user/profile', formData);
+      
+      console.log('Server response:', response.data);
 
+      if (response.data.status === 'success' && response.data.data.user) {
+        // Update the user in context
+        await updateUser(response.data.data.user);
+        
+        // Update form data with new values
+        setFormData({
+          username: response.data.data.user.username,
+          email: response.data.data.user.email
+        });
+        
+        setSuccess('Profile updated successfully');
         setIsEditing(false);
-        // Reset password fields
-        setFormData(prev => ({
-            ...prev,
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: ''
-        }));
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (error) {
-        setError(error.message || 'Failed to update profile');
+      console.error('Update error:', error);
+      console.error('Error response:', error.response?.data);
+      setError(error.response?.data?.message || 'Failed to update profile');
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
-
-  console.log('Current user:', user); // Debug log
-  console.log('Is editing:', isEditing); // Debug log
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -87,82 +71,34 @@ const Profile = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <h3 className="text-lg font-medium mb-4">Profile Information</h3>
-            <div className="grid grid-cols-1 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  disabled={!isEditing}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    isEditing ? 'bg-white' : 'bg-gray-50'
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  disabled={!isEditing}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    isEditing ? 'bg-white' : 'bg-gray-50'
-                  }`}
-                />
-              </div>
-            </div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Username
+            </label>
+            <input
+              type="text"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              disabled={!isEditing}
+              className={`w-full px-3 py-2 border rounded-md ${
+                isEditing ? 'bg-white' : 'bg-gray-50'
+              }`}
+            />
           </div>
 
-          {isEditing && (
-            <div>
-              <h3 className="text-lg font-medium mb-4">Change Password</h3>
-              <div className="grid grid-cols-1 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Password
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.currentPassword}
-                    onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.newPassword}
-                    onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm New Password
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-md"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              disabled={!isEditing}
+              className={`w-full px-3 py-2 border rounded-md ${
+                isEditing ? 'bg-white' : 'bg-gray-50'
+              }`}
+            />
+          </div>
 
           <div className="flex justify-end gap-4">
             {isEditing ? (

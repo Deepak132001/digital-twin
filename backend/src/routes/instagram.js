@@ -4,16 +4,10 @@ const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
 const instagramController = require('../controllers/instagramController');
 
-// OAuth callback - handles the OAuth flow
-router.get('/callback', instagramController.handleCallback);
+router.use(protect);
 
-// Webhook endpoints
-router.get('/webhook', instagramController.handleWebhookVerification);
-router.post('/webhook', instagramController.handleWebhookUpdate);
-
-// Protected routes
-router.get('/auth-url', protect, instagramController.getAuthUrl);
-router.post('/disconnect', protect, instagramController.disconnectInstagram);
-router.post('/sync', protect, instagramController.syncInstagramData);
+router.post('/connect', instagramController.connectInstagram);
+router.post('/sync', instagramController.syncInstagramData);
+router.get('/profile', instagramController.getProfile);
 
 module.exports = router;

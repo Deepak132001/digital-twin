@@ -30,6 +30,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.4",
     "nodemon": "^3.1.7",
+    "openai": "^4.76.3",
     "passport": "^0.7.0",
     "passport-instagram": "^1.0.0",
     "winston": "^3.17.0"

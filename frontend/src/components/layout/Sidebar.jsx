@@ -5,17 +5,18 @@ import {
   Instagram, 
   BarChart2, 
   Settings,
-  X 
+  X, 
+  Sparkles 
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Instagram, label: 'Instagram', path: '/instagram' },
+    { icon: Sparkles, label: 'AI Assistant', path: '/ai' },
     { icon: BarChart2, label: 'Analytics', path: '/analytics' },
-    { icon: Settings, label: 'Settings', path: '/settings' }
+    { icon: Settings, label: 'Settings', path: '/profile' }
   ];
-
   return (
     <>
       {/* Mobile backdrop */}

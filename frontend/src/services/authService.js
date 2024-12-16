@@ -1,7 +1,7 @@
-// src/services/authService.js
+// frontend/src/services/authService.js
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 const authService = {
   async login(email, password) {
@@ -11,30 +11,15 @@ const authService = {
         password
       });
 
-      console.log('Auth service response:', response.data); // Add this line
-
-      // Check if we have the expected data structure
-      if (response.data.status === 'success' && response.data.data) {
-        const { token, user } = response.data.data;
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        return { token, user };
-      } else {
-        throw new Error('Invalid response format');
+      if (response.data.data.token) {
+        localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
       }
-    } catch (error) {
-      throw this._handleError(error);
-    }
-  },
 
-  getCurrentUser() {
-    try {
-      const user = localStorage.getItem('user');
-      console.log('Stored user:', user); // Add this line
-      return user ? JSON.parse(user) : null;
+      return response.data;
     } catch (error) {
-      console.error('Error parsing user:', error);
-      return null;
+      console.error('Login error:', error.response?.data);
+      throw new Error(error.response?.data?.message || 'Failed to login');
     }
   },
 
@@ -45,15 +30,22 @@ const authService = {
         email,
         password
       });
-
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+  
+      if (response.data.data.token) {
+        // Initialize user with empty instagram object
+        const user = {
+          ...response.data.data.user,
+          instagram: {
+            connected: false
+          }
+        };
+        localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(user));
       }
-
+  
       return response.data;
     } catch (error) {
-      throw this._handleError(error);
+      throw error.response?.data?.message || 'Failed to register';
     }
   },
 
@@ -69,13 +61,6 @@ const authService = {
 
   getToken() {
     return localStorage.getItem('token');
-  },
-
-  _handleError(error) {
-    if (error.response?.data?.error) {
-      return new Error(error.response.data.error);
-    }
-    return new Error('An unexpected error occurred');
   }
 };
 
